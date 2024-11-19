@@ -1,50 +1,29 @@
-# Información de la aplicación 
-info:
-    app: 
-        encoding: '@project.build.sourceEncoding@' 
-# Codificación del proyecto, típicamente UTF-8 
-        java: 
-            source: '@java.version@'  
-            target: '@java.version@' 
-
-    version: '1.0.0'  # Reemplazado por un valor literal
-    name: 'MiAplicacion'  # Reemplazado por un valor literal
-
-Spring:
-    application:
-        name: 'MiAplicacion'  # Reemplazado por un valor literal
-    main:
-        banner-mode: 'OFF'
-
-    datasource:
-        url: jdbc:mysql://localhost:3306/testdb
-        username: santo_domingo
-        password: password
-        driver-class-name: com.mysql.cj.jdbc.Driver
-
-    jpa: 
-        show-sql: true 
-        open-in-view: false 
-        hibernate:
-            ddl-auto: update
-
-    sql:
-        init: 
-            platform: mysql
-            schema-locations: classpath:schema.sql
-            data-locations: classpath:data.sql
-
 server:
-    port: 8089
-    compression: 
-        enabled: true 
-
+  port: 8089
+  compression:
+    enabled: true
 
 spring:
-    jackson:
-        time-zone: UTC
+  datasource:
+    url: jdbc:mysql://localhost:3306/testdb
+    username: usuario_app
+    password: password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        '[format_sql]': true
+    database-platform: org.hibernate.dialect.MySQLDialect
+  jackson:
+    time-zone: UTC
 
-logging: 
-    config: classpath:log4j2.xml
+logging:
+  config: classpath:log4j2.xml
+
+  
+
 
 

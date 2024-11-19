@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE Configuration>
+
+<!--El elemento raíz <Configuration> define la configuración general de Log4j2. 
+El atributo 'status' establece el nivel de logging interno de Log4j2, 
+en este caso 'warn' para mostrar advertencias y errores.-->
+
+<Configuration status="warn">
+
+    <!--La sección <Appenders> define los destinos donde se enviarán los logs. 
+    Un appender puede ser la consola, un archivo, una base de datos, etc.-->
+
+    <Appenders>
+        <!--Definición de un appender de consola llamado "Console". 
+        Este appender enviará los logs a la salida estándar (consola).-->
+
+        <Console name="Console">
+            <PatternLayout 
+                pattern="%d{HH:mm:ss.SSS} [%t] %mdc %-5level %logger{36}%msg%n"/>
+        </Console>
+
+    </Appenders>
+    <Loggers>
+        <Logger name="com.universidad" level="debug" additivity="false"> 
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="org.springframework" level="error" additivity="false"> 
+            <AppenderRef ref="Console"/> 
+        </Logger>
+        <Root level="info"> 
+            <AppenderRef ref="Console"/> 
+        </Root>
+
+    </Loggers>
+
+</Configuration>

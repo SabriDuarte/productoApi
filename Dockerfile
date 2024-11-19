@@ -1,5 +1,5 @@
 # Usa una imagen de Java como base
-FROM openjdk:17-jdk-slim
+FROM openjdk:23-jdk-slim
 
 # Establece el directorio de trabajo en el contenedor
 WORKDIR /app
@@ -8,7 +8,7 @@ WORKDIR /app
 COPY target/demo-0.0.1-SNAPSHOT.jar /app/demo.jar
 
 # Expón el puerto que usará la aplicación
-EXPOSE 8080
+EXPOSE 8089
 
 # Comando para ejecutar la aplicación
 ENTRYPOINT ["java", "-jar", "/app/demo.jar"]

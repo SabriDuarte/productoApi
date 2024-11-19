@@ -6,44 +6,41 @@ import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 
 @Entity
-@Data
+@Data // Lombok se encarga de los getters, setters, toString, equals, hashCode, y
+      // constructor
 @Table(name = "crud_product")
-@NoArgsConstructor
-@Builder
-@AllArgsConstructor
+@NoArgsConstructor // Constructor vacío
+@AllArgsConstructor // Constructor con todos los parámetros
+@Builder // Permite la creación del producto usando el patrón builder
 public class Producto {
-    // Id auto generado para cada producto
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Validación "Nombre" como obligatorio hasta 100 caracteres
-    @NotNull(message = "Debes Agregar un Nombre")
+    @NotNull(message = "Debes agregar un nombre")
     @Size(min = 1, message = "El nombre debe tener al menos 1 caracter")
-    @Column(name = "Nombre")
-    private String Nombre;
+    @Column(name = "Nombre", nullable = false)
+    private String nombre;
 
-    // Validacion "Precio" como obligatorio
     @NotNull(message = "Debes agregar un precio")
-    @Column(name = "Precio")
-    private Integer Precio;
+    @Digits(integer = 10, fraction = 2, message = "El precio debe ser válido con hasta 10 dígitos enteros y 2 decimales")
+    @Column(name = "Precio", nullable = false)
+    private BigDecimal precio;
 
-    // Validacion "Stock" como obligatorio
-    @NotNull(message = "Debes agregar el Stock")
-    @Column(name = "Stock")
-    private Integer Stock;
+    @NotNull(message = "Debes agregar el stock")
+    @Column(name = "Stock", nullable = false)
+    private Integer stock;
 
-    // Fecha de creación automática
     @CreatedDate
-    @Column(name = "created_at")
+    @Column(name = "created_at", updatable = false, nullable = false)
     private ZonedDateTime createdAt;
 
-    // Fecha de última modificación (automática)
     @LastModifiedDate
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     private ZonedDateTime updatedAt;
-
 }
