@@ -2,78 +2,145 @@ package com.universidad.productoapi.controller;
 
 import com.universidad.productoapi.model.Producto;
 import com.universidad.productoapi.service.ProductoService;
-import com.universidad.productoapi.exceptions.EntityNotFoundExceptions;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor; // Lombok se encargará de crear el constructor
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
+/**
+ * Controlador para manejar las operaciones relacionadas con la gestión de
+ * productos.
+ */
+@Slf4j
 @RestController
+@Tag(name = "Productos", description = "Operaciones relacionadas con la gestión de productos.")
+@RequiredArgsConstructor
 @RequestMapping("/api/producto")
-@Tag(name = "Productos", description = "Gestión de productos")
-@RequiredArgsConstructor // Lombok se encarga de crear el constructor con ProductoService
 public class ProductoController {
+        private final ProductoService productoService;
 
-        private final ProductoService productoService; // Se inyecta automáticamente
-
-        @Operation(summary = "Obtener todos los productos", description = "Devuelve una lista de todos los productos registrados")
+        /**
+         * Obtiene una lista de todos los productos.
+         *
+         * return Lista de productos.
+         */
+        @Operation(summary = "Obtener todos los productos.", description = "Retorna una lista de todos los productos registrados.")
         @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Operación exitosa")
+                        @ApiResponse(responseCode = "200", description = "Lista de productos obtenida correctamente.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Producto.class))),
+                        @ApiResponse(responseCode = "500", description = "Error interno del servidor.", content = @Content)
         })
         @GetMapping
-        public List<Producto> obtenerProductos() {
-                return productoService.obteneProductos();
-        }
-
-        @Operation(summary = "Obtener un producto por ID", description = "Devuelve un producto específico buscado por su ID")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Producto encontrado"),
-                        @ApiResponse(responseCode = "404", description = "Producto no encontrado")
-        })
-        @GetMapping("/{id}")
-        public ResponseEntity<Producto> obtenerProducto(@PathVariable Long id) {
-                Producto producto = productoService.obtenerPorId(id)
-                                .orElseThrow(() -> new EntityNotFoundExceptions("El Producto no existe"));
+        public ResponseEntity<List<Producto>> obteneProductos() {
+                List<Producto> producto = productoService.obteneProductos();
+                log.info("Se obtuvo una lista de {} productos.", producto.size());
                 return ResponseEntity.ok(producto);
         }
 
-        @Operation(summary = "Crear un nuevo producto", description = "Agrega un nuevo producto al sistema")
+        /**
+         * Obtiene un producto por su ID.
+         *
+         * param id ID del producto a obtener.
+         * return Detalles del producto.
+         */
+        @Operation(summary = "Obtener un producto por su ID.", description = "Retorna un producto obtenido por su ID.")
         @ApiResponses(value = {
-                        @ApiResponse(responseCode = "201", description = "Producto creado exitosamente"),
-                        @ApiResponse(responseCode = "400", description = "Solicitud inválida")
+                        @ApiResponse(responseCode = "200", description = "Producto obtenido correctamente.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Producto.class))),
+                        @ApiResponse(responseCode = "404", description = "No se encontró el producto."),
+                        @ApiResponse(responseCode = "500", description = "Error interno del servidor.", content = @Content)
+        })
+        @GetMapping("/{id}")
+        public ResponseEntity<Optional<Producto>> getProducto(
+                        @Parameter(description = "ID del producto a obtener.", required = true, example = "1") @PathVariable Long id) {
+                Optional<Producto> producto = productoService.obtenerPorId(id);
+
+                if (producto.isPresent()) {
+                        log.info("Se obtuvo el producto {}.", producto.get().getNombre());
+                        return ResponseEntity.ok(producto);
+                } else {
+                        return ResponseEntity.notFound().build();
+                }
+        }
+
+        /**
+         * Agrega un producto.
+         *
+         * param product El producto a agregar.
+         * return El estado de la operacion.
+         */
+        @Operation(summary = "Agrega un producto.", description = "Retorna el estado de la operacion.")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "201", description = "Producto agregado correctamente.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Producto.class))),
+                        @ApiResponse(responseCode = "500", description = "Error interno del servidor.", content = @Content)
         })
         @PostMapping
-        public ResponseEntity<Producto> crearProducto(@RequestBody Producto producto) {
-                Producto nuevoProducto = productoService.crearProducto(producto)
-                                .orElseThrow(() -> new EntityNotFoundExceptions("Problemas creando el producto"));
-                return ResponseEntity.status(HttpStatus.CREATED).body(nuevoProducto);
+        public ResponseEntity<Optional<Producto>> createProducto(
+                        @Parameter(description = "Datos del producto a crear.", required = true) @RequestBody Producto producto) {
+                try {
+                        Optional<Producto> nuevoProducto = productoService.crearProducto(producto);
+
+                        if (nuevoProducto.isPresent()) {
+                                log.info("Se agrego el producto {}.", nuevoProducto.get().getNombre());
+                                return ResponseEntity.status(HttpStatus.CREATED).body(nuevoProducto);
+                        } else {
+                                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                        }
+                } catch (Exception e) {
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                }
         }
 
-        @Operation(summary = "Actualizar un producto existente", description = "Actualiza los datos de un producto por su ID")
+        /**
+         * Modifica un producto.
+         *
+         * param id El ID del producto a modificar.
+         * param product Los detalles producto a modificar.
+         * return El estado de la operacion.
+         */
+        @Operation(summary = "Modifica un producto.", description = "Retorna el estado de la operacion.")
         @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Producto actualizado correctamente"),
-                        @ApiResponse(responseCode = "404", description = "Producto no encontrado")
+                        @ApiResponse(responseCode = "200", description = "Producto modificado correctamente.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Producto.class))),
+                        @ApiResponse(responseCode = "500", description = "Error interno del servidor.", content = @Content)
         })
         @PutMapping("/{id}")
-        public ResponseEntity<Producto> actualizarProducto(@PathVariable Long id, @RequestBody Producto producto) {
-                Producto productoActualizado = productoService.actualizarProducto(id, producto)
-                                .orElseThrow(() -> new EntityNotFoundExceptions("Problemas al actualizar el producto"));
-                return ResponseEntity.ok(productoActualizado);
+        public ResponseEntity<Optional<Producto>> actualizarProducto(
+                        @Parameter(description = "ID del producto a modificar.", required = true, example = "1") @PathVariable Long id,
+                        @Parameter(description = "Detalles del producto a modificar.", required = true) @RequestBody Producto producto) {
+                Optional<Producto> actualizarProducto = productoService.actualizarProducto(id, producto);
+
+                if (actualizarProducto.isPresent()) {
+                        log.info("Se modifico el producto {}.", actualizarProducto.get().getNombre());
+                        return ResponseEntity.ok(actualizarProducto);
+                } else {
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+                }
         }
 
-        @Operation(summary = "Eliminar un producto", description = "Elimina un producto existente por su ID")
+        /**
+         * Elimina un producto.
+         *
+         * param id El ID del producto a eliminar.
+         * return El estado de la operacion.
+         */
+        @Operation(summary = "Elimina un producto.", description = "Retorna el estado de la operacion.")
         @ApiResponses(value = {
-                        @ApiResponse(responseCode = "204", description = "Producto eliminado correctamente"),
-                        @ApiResponse(responseCode = "404", description = "Producto no encontrado")
+                        @ApiResponse(responseCode = "200", description = "Producto eliminado correctamente.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Producto.class))),
+                        @ApiResponse(responseCode = "500", description = "Error interno del servidor.", content = @Content)
         })
         @DeleteMapping("/{id}")
-        public ResponseEntity<Void> eliminarProducto(@PathVariable Long id) {
+        public ResponseEntity<Void> eliminarProducto(
+                        @Parameter(description = "ID del producto a eliminar.", required = true, example = "1") @PathVariable Long id) {
+                log.info("Se elimino el producto con ID {}.", id);
                 productoService.eliminarProducto(id);
                 return ResponseEntity.noContent().build();
         }
